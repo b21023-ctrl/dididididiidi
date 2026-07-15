@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학교 탈출! 수학 책 던지기 게임</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: 'Malgun Gothic', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            border: 4px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            transition: background 0.5s ease;
+        }
+
+        /* UI 영역 */
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 10;
+        }
+
+        /* 게임 캐릭터 및 요소들 */
+        .student {
+            position: absolute;
+            right: 80px;
+            bottom: 50px;
+            width: 60px;
+            height: 90px;
+            background-color: rgba(74, 144, 226, 0.9);
+            border: 3px solid #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            z-index: 5;
+        }
+
+        .diploma-stack {
+            position: absolute;
+            right: 20px;
+            bottom: 50px;
+            width: 50px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 5px;
+        }
+
+        .diploma {
+            height: 15px;
+            background-color: #f5a623;
+            border: 2px solid #fff;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 10px;
+            line-height: 15px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* 핑크색 외눈박이 뿔 괴물 (유지) */
+        .monster {
+            position: absolute;
+            width: 120px;
+            height: 75px;
+            background-color: #ff65a3;
+            border: 3px solid #333;
+            border-radius: 20px 20px 15px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.4);
+            transition: left 0.1s linear;
+            z-index: 3;
+            padding-bottom: 8px;
+            box-sizing: border-box;
+        }
+
+        .monster::before, .monster::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 18px solid #cc3373;
+        }
+        .monster::before {
+            left: 15px;
+            transform: rotate(-15deg);
+        }
+        .monster::after {
+            right: 15px;
+            transform: rotate(15deg);
+        }
+
+        .monster-face {
+            position: absolute;
+            top: 8px;
+            width: 100%;
+            height: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .monster-eye {
+            width: 22px;
+            height: 22px;
+            background-color: #fff;
+            border-radius: 50%;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .monster-pupil {
+            width: 10px;
+            height: 10px;
+            background-color: #000;
+            border-radius: 50%;
+            position: relative;
+        }
+        .monster-pupil::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 3px;
+            height: 3px;
+            background-color: #fff;
+            border-radius: 50%;
+        }
+
+        .monster-mouth {
+            width: 45px;
+            height: 10px;
+            background-color: #5c1131;
+            border-radius: 3px 3px 10px 10px;
+            position: relative;
+            overflow: hidden;
+            border: 1.5px solid #333;
+            margin-top: 2px;
+        }
+
+        .monster-teeth {
+            position: absolute;
+            top: 0;
+            left: 5px;
+            width: 35px;
+            height: 6px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .monster-teeth::before, .monster-teeth::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 6px solid #fff;
+        }
+
+        .monster-math-text {
+            font-size: 16px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: -2px 0 #000, 0 2px #000, 2px 0 #000, 0 -2px #000;
+            z-index: 4;
+        }
+
+        .book {
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background-color: #50e3c2;
+            border: 2px solid #fff;
+            border-radius: 3px;
+            z-index: 4;
+        }
+
+        /* 입력창 영역 */
+        #input-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #answer-input {
+            width: 220px;
+            padding: 10px;
+            font-size: 20px;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            outline: none;
+        }
+
+        #answer-input:focus {
+            border-color: #50e3c2;
+        }
+
+        .input-tip {
+            font-size: 12px;
+            color: #ff65a3; /* 경고 느낌의 연한 핑크 */
+            font-weight: bold;
+        }
+
+        /* 화면 오버레이 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .overlay h2 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .overlay p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #ccc;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #50e3c2;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #40c4a7;
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- UI 정보 -->
+        <div id="ui-layer">
+            <div id="stage-info">스테이지: 1/4 (<span id="stage-name">교실</span>)</div>
+            <div id="score-info">점수: 0</div>
+        </div>
+
+        <!-- 아군 배치 -->
+        <div class="student">🧑‍🎓</div>
+        <div id="diploma-container" class="diploma-stack">
+            <div class="diploma">졸업장</div>
+            <div class="diploma">졸업장</div>
+            <div class="diploma">졸업장</div>
+            <div class="diploma">졸업장</div>
+            <div class="diploma">졸업장</div>
+        </div>
+
+        <!-- 몬스터 및 투사체 동적 생성 구역 -->
+        <div id="game-field"></div>
+
+        <!-- 시작 화면 -->
+        <div id="start-overlay" class="overlay">
+            <h2>🏫 학교 탈출 수학 레이드</h2>
+            <p>억압된 학교를 탈출하기 위해 다가오는 시험 괴물들을 물리치세요!<br>문제를 보고 올바른 답을 입력한 뒤 Enter를 누르면 책을 던집니다.<br><b>⚠️ 오답을 입력하고 Enter를 누르면 졸업장(목숨)이 깎이니 신중히 푸세요!</b></p>
+            <button class="btn" onclick="startGame()">탈출 시작</button>
+        </div>
+
+        <!-- 스테이지 클리어 화면 -->
+        <div id="clear-overlay" class="overlay hidden">
+            <h2 style="color: #50e3c2;">🎉 스테이지 클리어!</h2>
+            <p id="clear-text">다음 구역으로 이동합니다.</p>
+            <button class="btn" id="next-btn" onclick="nextStage()">다음 스테이지</button>
+        </div>
+
+        <!-- 게임 오버 화면 -->
+        <div id="gameover-overlay" class="overlay hidden">
+            <h2 style="color: #e24a4a;">☠️ 유급 확정 (게임 오버)</h2>
+            <p>학교 탈출에 실패했습니다. 수학 보충 수업을 들어야 합니다...</p>
+            <button class="btn" onclick="restartGame()">처음부터 다시 도전</button>
+        </div>
+    </div>
+
+    <!-- 입력 영역 -->
+    <div id="input-container">
+        <input type="text" id="answer-input" placeholder="정답 입력 후 Enter" disabled>
+        <div class="input-tip">※ 분수는 '3/4', 소수는 '1.5' 형태 입력 (틀릴 시 졸업장 차감!)</div>
+    </div>
+
+    <script>
+        // 전송해 주신 배경 이미지 경로 그대로 매칭 보장
+        const stages = [
+            { 
+                name: "교실", 
+                bg: "url('image_d00546.png')", 
+                types: ['basic', 'decimal'], 
+                speed: 0.8, 
+                spawnRate: 3200, 
+                target: 5 
+            },
+            { 
+                name: "복도", 
+                bg: "url('image_d00830.jpg')", 
+                types: ['basic', 'decimal', 'root_simple'], 
+                speed: 1.1, 
+                spawnRate: 2800, 
+                target: 7 
+            },
+            { 
+                name: "계단", 
+                bg: "url('image_d00906.jpg')", 
+                types: ['decimal', 'fraction_simple', 'root_simple'], 
+                speed: 1.4, 
+                spawnRate: 2400, 
+                target: 9 
+            },
+            { 
+                name: "운동장 (최종)", 
+                bg: "url('image_d00bf3.jpg')", 
+                types: ['decimal', 'fraction_hard', 'root_hard'], 
+                speed: 1.7, 
+                spawnRate: 2000, 
+                target: 12 
+            }
+        ];
+
+        let currentStageIdx = 0;
+        let score = 0;
+        let lives = 5;
+        let monstersDefeated = 0;
+        let isGameActive = false;
+
+        let monsterIdCounter = 0;
+        let monstersList = [];
+        let booksList = [];
+
+        let spawnInterval = null;
+        let gameLoopInterval = null;
+
+        const gameContainer = document.getElementById('game-container');
+        const gameField = document.getElementById('game-field');
+        const answerInput = document.getElementById('answer-input');
+        const scoreInfo = document.getElementById('score-info');
+        const stageInfo = document.getElementById('stage-info');
+        const stageNameSpan = document.getElementById('stage-name');
+        const diplomaContainer = document.getElementById('diploma-container');
+
+        // 게임 시작 초기화
+        function startGame() {
+            document.getElementById('start-overlay').classList.add('hidden');
+            answerInput.disabled = false;
+            answerInput.focus();
+            currentStageIdx = 0;
+            score = 0;
+            initStage();
+        }
+
+        // 스테이지 진입 설정
+        function initStage() {
+            isGameActive = true;
+            monstersDefeated = 0;
+            lives = 5;
+            
+            gameField.innerHTML = '';
+            monstersList = [];
+            booksList = [];
+            
+            updateUI();
+            
+            // 전송받은 이미지 파일명을 배경에 확실히 적용
+            gameContainer.style.backgroundImage = stages[currentStageIdx].bg;
+
+            answerInput.value = '';
+            answerInput.focus();
+
+            clearInterval(spawnInterval);
+            clearInterval(gameLoopInterval);
+            
+            spawnInterval = setInterval(spawnMonster, stages[currentStageIdx].spawnRate);
+            gameLoopInterval = setInterval(updateGameFrame, 20);
+        }
+
+        // UI 갱신 (점수 및 생명)
+        function updateUI() {
+            stageInfo.textContent = `스테이지: ${currentStageIdx + 1}/4`;
+            const stageNames = ["교실", "복도", "계단", "운동장"];
+            stageNameSpan.textContent = stageNames[currentStageIdx];
+            scoreInfo.textContent = `점수: ${score}`;
+            
+            // 졸업장 UI 초기화 및 개수 보정출력
+            diplomaContainer.innerHTML = '';
+            for(let i=0; i<lives; i++) {
+                const dip = document.createElement('div');
+                dip.className = 'diploma';
+                dip.textContent = '졸업장';
+                diplomaContainer.appendChild(dip);
+            }
+        }
+
+        // 고도화된 수학 문제 생성 엔진 (유지)
+        function generateProblem() {
+            const stage = stages[currentStageIdx];
+            const type = stage.types[Math.floor(Math.random() * stage.types.length)];
+            
+            let question = "";
+            let answer = "";
+
+            switch(type) {
+                case 'basic': {
+                    const ops = ['+', '-', '*', '/'];
+                    const op = ops[Math.floor(Math.random() * ops.length)];
+                    if (op === '+') {
+                        const n1 = Math.floor(Math.random() * 20) + 5;
+                        const n2 = Math.floor(Math.random() * 20) + 5;
+                        question = `${n1} + ${n2}`;
+                        answer = String(n1 + n2);
+                    } else if (op === '-') {
+                        const n1 = Math.floor(Math.random() * 30) + 10;
+                        const n2 = Math.floor(Math.random() * (n1 - 1)) + 1;
+                        question = `${n1} - ${n2}`;
+                        answer = String(n1 - n2);
+                    } else if (op === '*') {
+                        const n1 = Math.floor(Math.random() * 8) + 2;
+                        const n2 = Math.floor(Math.random() * 9) + 2;
+                        question = `${n1} × ${n2}`;
+                        answer = String(n1 * n2);
+                    } else {
+                        const n2 = Math.floor(Math.random() * 8) + 2;
+                        const ans = Math.floor(Math.random() * 9) + 2;
+                        question = `${n2 * ans} ÷ ${n2}`;
+                        answer = String(ans);
+                    }
+                    break;
+                }
+                case 'decimal': {
+                    const ops = ['+', '-', '*'];
+                    const op = ops[Math.floor(Math.random() * ops.length)];
+                    if (op === '+') {
+                        const n1 = (Math.floor(Math.random() * 40) + 10) / 10;
+                        const n2 = (Math.floor(Math.random() * 40) + 10) / 10;
+                        question = `${n1} + ${n2}`;
+                        answer = (n1 + n2).toFixed(1);
+                    } else if (op === '-') {
+                        const n1 = (Math.floor(Math.random() * 50) + 30) / 10;
+                        const n2 = (Math.floor(Math.random() * (n1 * 10 - 5)) + 5) / 10;
+                        question = `${n1} - ${n2}`;
+                        answer = (n1 - n2).toFixed(1);
+                    } else {
+                        const n1 = (Math.floor(Math.random() * 15) + 5) / 10;
+                        const n2 = Math.floor(Math.random() * 5) + 2;
+                        question = `${n1} × ${n2}`;
+                        answer = (n1 * n2).toFixed(1);
+                    }
+                    if (answer.endsWith('.0')) {
+                        answer = String(Math.round(parseFloat(answer)));
+                    }
+                    break;
+                }
+                case 'fraction_simple': {
+                    const denominators = [2, 3, 4, 5];
+                    const den = denominators[Math.floor(Math.random() * denominators.length)];
+                    const n1 = Math.floor(Math.random() * (den - 1)) + 1;
+                    let n2 = Math.floor(Math.random() * (den - 1)) + 1;
+                    
+                    const op = Math.random() > 0.5 ? '+' : '-';
+                    if (op === '+') {
+                        question = `${n1}/${den} + ${n2}/${den}`;
+                        const sum = n1 + n2;
+                        if (sum === den) answer = "1";
+                        else {
+                            const gcdVal = gcd(sum, den);
+                            answer = `${sum/gcdVal}/${den/gcdVal}`;
+                        }
+                    } else {
+                        const maxNum = Math.max(n1, n2);
+                        const minNum = Math.min(n1, n2);
+                        if (maxNum === minNum) {
+                            question = `${maxNum}/${den} - ${Math.max(1, minNum - 1)}/${den}`;
+                            const sub = 1;
+                            const gcdVal = gcd(sub, den);
+                            answer = `${sub/gcdVal}/${den/gcdVal}`;
+                        } else {
+                            question = `${maxNum}/${den} - ${minNum}/${den}`;
+                            const sub = maxNum - minNum;
+                            const gcdVal = gcd(sub, den);
+                            answer = `${sub/gcdVal}/${den/gcdVal}`;
+                        }
+                    }
+                    break;
+                }
+                case 'fraction_hard': {
+                    const dens = [2, 3, 4, 6];
+                    const idx1 = Math.floor(Math.random() * dens.length);
+                    let idx2 = Math.floor(Math.random() * dens.length);
+                    if (idx1 === idx2) idx2 = (idx1 + 1) % dens.length;
+                    
+                    const d1 = dens[idx1];
+                    const d2 = dens[idx2];
+                    const num1 = 1;
+                    const num2 = 1; 
+
+                    const op = Math.random() > 0.5 ? '+' : '-';
+                    if (op === '+') {
+                        question = `1/${d1} + 1/${d2}`;
+                        const top = d2 + d1;
+                        const bottom = d1 * d2;
+                        const gcdVal = gcd(top, bottom);
+                        answer = `${top/gcdVal}/${bottom/gcdVal}`;
+                    } else {
+                        const bigD = Math.max(d1, d2);
+                        const smallD = Math.min(d1, d2);
+                        question = `1/${smallD} - 1/${bigD}`;
+                        const top = bigD - smallD;
+                        const bottom = bigD * smallD;
+                        const gcdVal = gcd(top, bottom);
+                        answer = `${top/gcdVal}/${bottom/gcdVal}`;
+                    }
+                    break;
+                }
+                case 'root_simple': {
+                    const roots = [
+                        { q: "√4", a: "2" },
+                        { q: "√9", a: "3" },
+                        { q: "√16", a: "4" },
+                        { q: "√25", a: "5" },
+                        { q: "√36", a: "6" },
+                        { q: "√49", a: "7" },
+                        { q: "√64", a: "8" },
+                        { q: "√81", a: "9" },
+                        { q: "√100", a: "10" }
+                    ];
+                    const selected = roots[Math.floor(Math.random() * roots.length)];
+                    question = selected.q;
+                    answer = selected.a;
+                    break;
+                }
+                case 'root_hard': {
+                    const mixType = Math.floor(Math.random() * 3);
+                    if (mixType === 0) {
+                        const r1 = Math.floor(Math.random() * 5) + 2;
+                        const r2 = Math.floor(Math.random() * 5) + 2;
+                        question = `√${r1*r1} + √${r2*r2}`;
+                        answer = String(r1 + r2);
+                    } else if (mixType === 1) {
+                        const r1 = Math.floor(Math.random() * 4) + 2;
+                        const r2 = Math.floor(Math.random() * 4) + 2;
+                        question = `√${r1} × √${r1*r2*r2}`;
+                        answer = String(r1 * r2);
+                    } else {
+                        const r = Math.floor(Math.random() * 7) + 3;
+                        const n = Math.floor(Math.random() * 8) + 2;
+                        question = `√${r*r} × ${n}`;
+                        answer = String(r * n);
+                    }
+                    break;
+                }
+            }
+
+            return { question: question, answer: answer };
+        }
+
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+
+        // 몬스터 소환
+        function spawnMonster() {
+            if (!isGameActive) return;
+
+            if (monstersDefeated + monstersList.length >= stages[currentStageIdx].target) return;
+
+            const prob = generateProblem();
+            const id = monsterIdCounter++;
+            const topPos = Math.floor(Math.random() * 250) + 100;
+
+            const monsterEl = document.createElement('div');
+            monsterEl.className = 'monster';
+            monsterEl.id = `monster-${id}`;
+            monsterEl.style.left = '0px';
+            monsterEl.style.top = `${topPos}px`;
+
+            monsterEl.innerHTML = `
+                <div class="monster-face">
+                    <div class="monster-eye">
+                        <div class="monster-pupil"></div>
+                    </div>
+                    <div class="monster-mouth">
+                        <div class="monster-teeth"></div>
+                    </div>
+                </div>
+                <div class="monster-math-text">${prob.question}</div>
+            `;
+
+            gameField.appendChild(monsterEl);
+
+            monstersList.push({
+                id: id,
+                element: monsterEl,
+                answer: prob.answer,
+                x: 0,
+                y: topPos,
+                speed: stages[currentStageIdx].speed
+            });
+        }
+
+        // 매 프레임 업데이트 게임 루프
+        function updateGameFrame() {
+            if (!isGameActive) return;
+
+            // 1. 몬스터 이동
+            for (let i = monstersList.length - 1; i >= 0; i--) {
+                let m = monstersList[i];
+                m.x += m.speed;
+                m.element.style.left = `${m.x}px`;
+
+                if (m.x >= 650) {
+                    m.element.remove();
+                    monstersList.splice(i, 1);
+                    loseLife();
+                }
+            }
+
+            // 2. 투사체(책) 이동 및 충돌 체크
+            for (let i = booksList.length - 1; i >= 0; i--) {
+                let b = booksList[i];
+                b.x -= 10;
+                b.element.style.left = `${b.x}px`;
+
+                let target = monstersList.find(m => m.id === b.targetId);
+
+                if (target) {
+                    if (Math.abs(b.x - target.x) < 40 && Math.abs(b.y - target.y) < 40) {
+                        target.element.remove();
+                        monstersList = monstersList.filter(m => m.id !== target.id);
+                        
+                        b.element.remove();
+                        booksList.splice(i, 1);
+
+                        score += 10;
+                        monstersDefeated++;
+                        updateUI();
+                        checkStageClear();
+                        continue;
+                    }
+                }
+
+                if (b.x < 0) {
+                    b.element.remove();
+                    booksList.splice(i, 1);
+                }
+            }
+        }
+
+        // [구현 완료] 정답 제출 시 오답 페널티(졸업장 차감) 시스템 추가된 핸들러
+        answerInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const userAns = answerInput.value.trim();
+                if (userAns === '') return;
+
+                let matchedMonster = null;
+                let maxX = -1;
+                
+                for (let m of monstersList) {
+                    if (m.answer.toLowerCase() === userAns.toLowerCase() && m.x > maxX) {
+                        maxX = m.x;
+                        matchedMonster = m;
+                    }
+                }
+
+                if (matchedMonster) {
+                    // 정답일 경우: 정상적으로 책 투사체 발사
+                    throwBook(matchedMonster.id, matchedMonster.y);
+                } else {
+                    // 틀렸을 경우: 즉시 목숨(졸업장)이 날아가고 5점 감점
+                    score = Math.max(0, score - 5);
+                    loseLife();
+                }
+
+                answerInput.value = '';
+            }
+        });
+
+        // 책 던지기 이펙트
+        function throwBook(targetId, targetY) {
+            const bookEl = document.createElement('div');
+            bookEl.className = 'book';
+            const startX = 700; 
+            bookEl.style.left = `${startX}px`;
+            bookEl.style.top = `${targetY + 25}px`;
+            bookEl.textContent = '📘';
+            bookEl.style.fontSize = '12px';
+            bookEl.style.textAlign = 'center';
+
+            gameField.appendChild(bookEl);
+
+            booksList.push({
+                element: bookEl,
+                x: startX,
+                y: targetY + 25,
+                targetId: targetId
+            });
+        }
+
+        // 데미지 (목숨 및 졸업장 UI 차감)
+        function loseLife() {
+            lives--;
+            updateUI();
+            if (lives <= 0) {
+                gameOver();
+            }
+        }
+
+        // 스테이지 클리어 검사
+        function checkStageClear() {
+            if (monstersDefeated >= stages[currentStageIdx].target) {
+                isGameActive = false;
+                clearInterval(spawnInterval);
+                clearInterval(gameLoopInterval);
+
+                const clearOverlay = document.getElementById('clear-overlay');
+                const clearText = document.getElementById('clear-text');
+                const nextBtn = document.getElementById('next-btn');
+
+                clearOverlay.classList.remove('hidden');
+                answerInput.disabled = true;
+
+                if (currentStageIdx < stages.length - 1) {
+                    clearText.innerHTML = `축하합니다! <b>${stages[currentStageIdx].name}</b> 구역을 무사히 벗어났습니다.<br>다음 통제 구역으로 이동합니다.`;
+                    nextBtn.textContent = "다음 구역으로";
+                } else {
+                    clearText.innerHTML = `🎉 <b>자유 실현!</b> 🎉<br>운동장을 가로질러 교문을 부수고 완전히 탈출했습니다!<br>당신의 천재적인 연산 능력이 학교의 억압을 깼습니다.`;
+                    nextBtn.textContent = "다시 처음부터 하기";
+                    nextBtn.onclick = restartGame;
+                }
+            }
+        }
+
+        // 다음 스테이지
+        function nextStage() {
+            document.getElementById('clear-overlay').classList.add('hidden');
+            currentStageIdx++;
+            answerInput.disabled = false;
+            initStage();
+        }
+
+        // 게임 오버
+        function gameOver() {
+            isGameActive = false;
+            clearInterval(spawnInterval);
+            clearInterval(gameLoopInterval);
+            document.getElementById('gameover-overlay').classList.remove('hidden');
+            answerInput.disabled = true;
+        }
+
+        // 재시작
+        function restartGame() {
+            document.getElementById('gameover-overlay').classList.add('hidden');
+            document.getElementById('clear-overlay').classList.add('hidden');
+            document.getElementById('next-btn').onclick = nextStage; 
+            startGame();
+        }
+    </script>
+</body>
+</html>
